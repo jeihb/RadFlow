@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>RadFlow — Simulador educativo RIS + CT</title>
+<style>
+:root{
+  --bg:#eef2f7; --panel:#fff; --ink:#152033; --muted:#667085; --line:#d8dee9;
+  --blue:#2563eb; --blue2:#0ea5e9; --green:#16a34a; --amber:#d97706; --red:#dc2626;
+  --nav:#0b1220; --nav2:#121c30; --shadow:0 8px 28px rgba(15,23,42,.10); --r:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.topbar{height:58px;background:var(--nav);color:#fff;display:flex;align-items:center;padding:0 16px;gap:14px;position:sticky;top:0;z-index:50}
+.brand{font-weight:800;letter-spacing:.3px}.badge{font-size:11px;padding:4px 8px;border-radius:99px;background:#1e3a8a;color:#dbeafe}
+.top-actions{margin-left:auto;display:flex;gap:8px}
+.iconbtn{background:#17223a;border:1px solid #263452;color:#fff;border-radius:10px;padding:8px 10px}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 58px)}
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:14px;position:sticky;top:58px;height:calc(100vh - 58px)}
+.navbtn{width:100%;text-align:left;background:transparent;border:0;padding:11px 12px;border-radius:10px;color:#334155;margin:2px 0}
+.navbtn.active{background:#e8f0ff;color:#1748b8;font-weight:700}
+.navbtn small{display:block;color:#7b8798;font-weight:400;margin-top:2px}
+main{padding:18px;max-width:1600px;width:100%;margin:auto}
+.screen{display:none}.screen.active{display:block}
+h1{font-size:25px;margin:0 0 5px}.sub{color:var(--muted);margin:0 0 18px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.card h2,.card h3{margin:0 0 12px}.section-title{font-weight:800;margin:20px 0 10px}
+label{display:block;font-size:12px;font-weight:700;color:#475467;margin:0 0 5px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:9px;padding:10px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+textarea{min-height:84px;resize:vertical}
+.formgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.formgrid .span2{grid-column:span 2}.formgrid .span4{grid-column:1/-1}
+.btn{border:1px solid #cbd5e1;background:#fff;color:#1f2937;padding:9px 13px;border-radius:9px;font-weight:700}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.btn.danger{background:#fff1f2;border-color:#fecdd3;color:#b91c1c}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:middle}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#64748b;background:#f8fafc}
+.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800}.s-blue{background:#e0f2fe;color:#075985}.s-green{background:#dcfce7;color:#166534}.s-amber{background:#fef3c7;color:#92400e}.s-red{background:#fee2e2;color:#991b1b}
+.kpi{font-size:27px;font-weight:800}.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.patientbar{display:flex;gap:10px;align-items:center;justify-content:space-between;background:#0f172a;color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.patientbar .meta{font-size:12px;color:#cbd5e1}.patientbar strong{font-size:16px}
+.stepper{display:flex;gap:6px;overflow:auto;margin-bottom:14px}.step{padding:8px 12px;border-radius:99px;background:#e5e7eb;color:#475569;font-size:12px;font-weight:800;white-space:nowrap}.step.on{background:#dbeafe;color:#1d4ed8}.step.done{background:#dcfce7;color:#166534}
+.ct-layout{display:grid;grid-template-columns:320px minmax(0,1fr) 310px;gap:14px}
+.anatomy{min-height:460px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#f8fafc,#eef2f7);border-radius:12px;position:relative;overflow:hidden}
+.body-svg{width:180px;height:420px}.hotspot{fill:#dbeafe;stroke:#2563eb;stroke-width:2;cursor:pointer}.hotspot:hover{fill:#93c5fd}.hotspot.selected{fill:#2563eb;stroke:#0f172a}
+.legend{font-size:11px;color:#64748b;text-align:center;margin-top:8px}
+.protocols{display:grid;grid-template-columns:1fr 1fr;gap:8px}.protocol{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;text-align:left}.protocol.sel{border:2px solid var(--blue);background:#eff6ff}.protocol b{display:block}.protocol small{color:#64748b}
+.viewer{background:#020617;border-radius:12px;min-height:470px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.viewer canvas{max-width:100%;height:auto;image-rendering:auto}.view-label{position:absolute;left:12px;top:10px;color:#d1d5db;font:12px ui-monospace}.view-tools{position:absolute;right:10px;top:10px;display:flex;gap:5px}.view-tools button{background:#111827;color:#fff;border:1px solid #374151;border-radius:7px;padding:6px}
+.acq{display:flex;flex-direction:column;gap:9px}.phase{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}.phase.done{border-color:#86efac;background:#f0fdf4}.dot{width:9px;height:9px;border-radius:50%;background:#94a3b8}.phase.active .dot{background:#2563eb;box-shadow:0 0 0 5px rgba(37,99,235,.12)}.phase.done .dot{background:#16a34a}
+.console-footer{position:sticky;bottom:8px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);padding:10px;border:1px solid var(--line);border-radius:12px;display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:12px;box-shadow:var(--shadow)}
+.radiation{height:8px;background:#111827;border-radius:999px;overflow:hidden}.radiation span{display:block;width:0;height:100%;background:#facc15;transition:width .4s}
+.injector{border:1px solid #334155;background:#0b1220;color:#fff;border-radius:14px;padding:14px}.injector .screen{display:block;background:#111827;border-radius:10px;padding:12px}.injgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.injmetric{background:#172033;border-radius:9px;padding:10px}.injmetric small{color:#94a3b8;display:block}.injmetric b{font-size:18px}
+.modal{position:fixed;inset:0;background:rgba(2,6,23,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal.open{display:flex}.modalbox{background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.3)}.modalhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalbody{padding:16px}.close{border:0;background:#f1f5f9;border-radius:8px;padding:7px 10px}
+.toast{position:fixed;right:18px;bottom:18px;background:#0f172a;color:#fff;padding:12px 15px;border-radius:10px;display:none;z-index:150;box-shadow:var(--shadow)}.toast.show{display:block}
+.warning{border-left:4px solid var(--amber);background:#fffbeb;padding:10px 12px;border-radius:8px;color:#92400e;font-size:12px}.info{border-left:4px solid var(--blue);background:#eff6ff;padding:10px 12px;border-radius:8px;color:#1e40af;font-size:12px}
+@media(max-width:1100px){.app{grid-template-columns:1fr}.sidebar{position:relative;top:0;height:auto;border-right:0;border-bottom:1px solid var(--line);display:flex;gap:5px;overflow:auto}.navbtn{min-width:150px}.ct-layout{grid-template-columns:1fr 1.5fr}.ct-layout>.right{grid-column:1/-1}.g4{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:720px){main{padding:10px}.g2,.g3,.g4{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.formgrid .span2{grid-column:auto}.ct-layout{grid-template-columns:1fr}.viewer{min-height:360px}.protocols{grid-template-columns:1fr}.topbar{padding:0 10px}.sidebar{padding:8px}.navbtn{min-width:130px}.patientbar{align-items:flex-start;flex-direction:column}.console-footer{position:relative}.injgrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">RadFlow</div><span class="badge">EDUCATIONAL DEMO · v2</span>
+  <div class="top-actions">
+    <button class="iconbtn" onclick="openModal('aboutModal')">ⓘ</button>
+    <button class="iconbtn" onclick="resetDemo()">↻ Reiniciar</button>
+  </div>
+</header>
+
+<div class="app">
+<aside class="sidebar">
+  <button class="navbtn active" data-screen="ris" onclick="showScreen('ris')">🏥 RIS<small>Registro y agenda</small></button>
+  <button class="navbtn" data-screen="ct" onclick="showScreen('ct')">🖥️ Consola CT<small>Preparación y adquisición</small></button>
+  <button class="navbtn" data-screen="viewer" onclick="showScreen('viewer')">🩻 Visualizador<small>Imágenes y revisión</small></button>
+</aside>
+
+<main>
+<!-- RIS -->
+<section id="ris" class="screen active">
+  <h1>RIS · Registro y gestión de cita</h1>
+  <p class="sub">Simulación educativa de cómo la información administrativa y clínica entra al flujo de imagenología.</p>
+
+  <div class="grid g4">
+    <div class="card"><div class="muted">Citas de hoy</div><div class="kpi">24</div></div>
+    <div class="card"><div class="muted">CT pendientes</div><div class="kpi">7</div></div>
+    <div class="card"><div class="muted">Urgentes</div><div class="kpi">2</div></div>
+    <div class="card"><div class="muted">Información incompleta</div><div class="kpi" id="incompleteKpi">3</div></div>
+  </div>
+
+  <div class="section-title">1 · Registro de la cita</div>
+  <div class="card">
+    <div class="formgrid">
+      <div class="span2"><label>Paciente</label><input id="pname" value="Ana María Vargas Solano"></div>
+      <div><label>Identificación</label><input value="1-2345-0678"></div>
+      <div><label>Fecha de nacimiento</label><input type="date" value="1982-04-17"></div>
+      <div><label>Sexo</label><select><option>Femenino</option><option>Masculino</option><option>Otro / no especificado</option></select></div>
+      <div><label>Modalidad</label><select id="modality" onchange="updateModality()"><option>CT</option><option>Rayos X</option><option>Ultrasonido (US)</option><option>Resonancia Magnética (RM)</option></select></div>
+      <div><label>Área / sala</label><select id="room"><option>CT · Sala 2</option><option>CT · Sala 1</option><option>Rayos X · Sala 1</option><option>US · Sala 3</option><option>RM · Sala 1</option></select></div>
+      <div><label>Fecha del estudio</label><input id="studyDate" type="date"></div>
+      <div><label>Hora</label><input id="studyTime" type="time" value="09:30"></div>
+      <div class="span2"><label>Médico solicitante</label><input value="Dra. Laura Rodríguez"></div>
+      <div class="span2"><label>Estudio solicitado</label><input id="studyName" value="CT abdomen y pelvis con contraste"></div>
+      <div class="span4"><label>Motivo / indicación clínica breve</label><textarea id="indication">Dolor abdominal de 48 horas. Evaluar causa inflamatoria.</textarea></div>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn primary" onclick="openModal('specialModal')">＋ Indicaciones especiales</button>
+      <button class="btn" onclick="openModal('clinicalModal')">＋ Información clínica / seguridad</button>
+      <button class="btn green" onclick="saveAppointment()">Guardar cita</button>
+    </div>
+  </div>
+
+  <div class="section-title">2 · Agenda / worklist</div>
+  <div class="card" style="overflow:auto">
+    <table>
+      <thead><tr><th>Hora</th><th>Paciente</th><th>Modalidad</th><th>Estudio</th><th>Estado</th><th>Seguridad</th><th></th></tr></thead>
+      <tbody id="worklist">
+        <tr><td>08:30</td><td><b>José A. Méndez</b><br><span class="muted">1-1111-1111</span></td><td>Rayos X</td><td>Tórax PA y lateral</td><td><span class="status s-green">Registrado</span></td><td><span class="status s-green">Completa</span></td><td><button class="btn" onclick="toast('Paciente cargado en la agenda')">Abrir</button></td></tr>
+        <tr><td>09:30</td><td><b>Ana María Vargas Solano</b><br><span class="muted">1-2345-0678</span></td><td>CT</td><td>Abdomen y pelvis con contraste</td><td><span class="status s-blue">Programado</span></td><td><span id="safetyStatus" class="status s-amber">Revisar</span></td><td><button class="btn primary" onclick="loadCT()">Enviar a CT</button></td></tr>
+        <tr><td>10:15</td><td><b>María Fernanda Soto</b></td><td>US</td><td>US abdominal</td><td><span class="status s-blue">Programado</span></td><td><span class="status s-green">Completa</span></td><td><button class="btn" onclick="toast('Orden seleccionada')">Abrir</button></td></tr>
+        <tr><td>11:00</td><td><b>Carlos R. Pérez</b></td><td>RM</td><td>RM columna lumbar</td><td><span class="status s-blue">Programado</span></td><td><span class="status s-amber">Implantes: revisar</span></td><td><button class="btn" onclick="toast('Revisión de seguridad RM')">Abrir</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CT -->
+<section id="ct" class="screen">
+  <h1>Consola CT · Simulación de adquisición</h1>
+  <p class="sub">Flujo educativo: importar orden RIS → seleccionar región/protocolo → verificar paciente → preparar inyector → adquirir.</p>
+
+  <div class="patientbar">
+    <div><strong id="ctPatient">Ana María Vargas Solano</strong><div class="meta">ID 1-2345-0678 · F · 44 años · RIS → CT</div></div>
+    <div><span class="status s-green">Orden importada</span></div>
+  </div>
+
+  <div class="stepper"><span id="st1" class="step on">1. Paciente</span><span id="st2" class="step">2. Región / protocolo</span><span id="st3" class="step">3. Posición</span><span id="st4" class="step">4. Inyector</span><span id="st5" class="step">5. Adquisición</span></div>
+
+  <div class="ct-layout">
+    <div class="card">
+      <h3>Mapa anatómico</h3>
+      <div class="anatomy">
+        <svg class="body-svg" viewBox="0 0 180 420" aria-label="Mapa anatómico educativo">
+          <circle cx="90" cy="45" r="27" class="hotspot" data-region="Cabeza" onclick="selectRegion('Cabeza',this)"/>
+          <path d="M70 75 L110 75 L122 150 L110 210 L70 210 L58 150 Z" class="hotspot" data-region="Tórax" onclick="selectRegion('Tórax',this)"/>
+          <path d="M70 205 L110 205 L115 275 L65 275 Z" class="hotspot" data-region="Abdomen" onclick="selectRegion('Abdomen',this)"/>
+          <path d="M65 270 L115 270 L120 315 L60 315 Z" class="hotspot" data-region="Pelvis" onclick="selectRegion('Pelvis',this)"/>
+          <path d="M60 305 L78 315 L70 410 L55 410 Z" class="hotspot" data-region="Miembro inferior" onclick="selectRegion('Miembro inferior',this)"/>
+          <path d="M120 305 L102 315 L110 410 L125 410 Z" class="hotspot" data-region="Miembro inferior" onclick="selectRegion('Miembro inferior',this)"/>
+          <path d="M62 85 L42 105 L30 180 L43 184 L70 125 Z" class="hotspot" data-region="Miembro superior" onclick="selectRegion('Miembro superior',this)"/>
+          <path d="M118 85 L138 105 L150 180 L137 184 L110 125 Z" class="hotspot" data-region="Miembro superior" onclick="selectRegion('Miembro superior',this)"/>
+        </svg>
+      </div>
+      <div class="legend">Seleccione una región. El mapa es una representación educativa, no una herramienta de posicionamiento clínico.</div>
+    </div>
+
+    <div class="card">
+      <h3>Orden importada desde RIS</h3>
+      <div class="info" style="margin-bottom:10px">La consola no debería obligar al tecnólogo a volver a digitar información que ya existe en el RIS. En un sistema real, los datos viajarían mediante interfaces institucionales.</div>
+      <div class="formgrid">
+        <div><label>Región seleccionada</label><input id="region" value="Abdomen" readonly></div>
+        <div><label>Posición</label><select id="position"><option>Supino · cabeza primero</option><option>Supino · pies primero</option><option>Prono</option></select></div>
+        <div><label>Campo de visión</label><select><option>Según protocolo</option><option>Automático</option><option>Manual</option></select></div>
+        <div><label>Reconstrucción</label><select><option>Axial + coronal + sagital</option><option>Axial</option><option>3D</option></select></div>
+      </div>
+      <div class="section-title">Protocolos</div>
+      <div class="protocols">
+        <button class="protocol sel" data-proto="CT abdomen multiphase" onclick="selectProtocol(this)"><b>Abdomen multiphase</b><small>Simple · arterial · venosa · tardía</small></button>
+        <button class="protocol" data-proto="CT tórax" onclick="selectProtocol(this)"><b>Tórax</b><small>Inspiración · según indicación</small></button>
+        <button class="protocol" data-proto="CT cabeza" onclick="selectProtocol(this)"><b>Cabeza</b><small>Sin contraste / protocolo específico</small></button>
+        <button class="protocol" data-proto="CT pelvis" onclick="selectProtocol(this)"><b>Pelvis</b><small>Según indicación clínica</small></button>
+      </div>
+      <div class="section-title">Verificación previa</div>
+      <div class="grid">
+        <label><input type="checkbox" id="idcheck" checked> Identidad / orden coinciden</label>
+        <label><input type="checkbox" id="positionCheck"> Posición confirmada</label>
+        <label><input type="checkbox" id="contrastCheck"> Seguridad de contraste revisada</label>
+      </div>
+    </div>
+
+    <div class="card right">
+      <h3>Inyector automático</h3>
+      <div class="injector">
+        <div class="screen">
+          <div style="font-size:11px;color:#94a3b8">DUAL-HEAD CONTRAST INJECTOR · TRAINING MODE</div>
+          <div class="injgrid" style="margin-top:8px">
+            <div class="injmetric"><small>A</small><b id="injA">100 mL</b></div>
+            <div class="injmetric"><small>B</small><b id="injB">30 mL</b></div>
+            <div class="injmetric"><small>Rate</small><b id="injRate">4.0 mL/s</b></div>
+          </div>
+          <div style="margin-top:9px;font-size:12px;color:#cbd5e1">Estado: <span id="injState">Standby</span></div>
+        </div>
+      </div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn primary" onclick="openModal('injectorModal')">Abrir control del inyector</button>
+      </div>
+      <div class="warning" style="margin-top:10px">Parámetros ficticios para enseñanza. Nunca usar esta demo para administrar contraste a una persona.</div>
+    </div>
+  </div>
+
+  <div class="console-footer">
+    <div style="flex:1"><div class="muted" style="font-size:11px">Progreso de adquisición</div><div class="radiation"><span id="dosebar"></span></div></div>
+    <button class="btn" onclick="confirmPosition()">Confirmar posición</button>
+    <button class="btn primary" onclick="startAcquisition()">▶ Dar rayos X / iniciar adquisición</button>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>Secuencia de adquisición</h3>
+    <div class="acq">
+      <div id="ph-topo" class="phase active"><span class="dot"></span><div><b>Topograma</b><div class="muted">Planificación del volumen</div></div></div>
+      <div id="ph-simple" class="phase"><span class="dot"></span><div><b>Abdomen · fase simple</b><div class="muted">Sin contraste</div></div></div>
+      <div id="ph-art" class="phase"><span class="dot"></span><div><b>Fase arterial</b><div class="muted">Con contraste · sincronización simulada</div></div></div>
+      <div id="ph-ven" class="phase"><span class="dot"></span><div><b>Fase venosa</b><div class="muted">Con contraste · sincronización simulada</div></div></div>
+      <div id="ph-del" class="phase"><span class="dot"></span><div><b>Fase tardía</b><div class="muted">Con contraste · sincronización simulada</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VIEWER -->
+<section id="viewer" class="screen">
+  <h1>Visualizador radiológico · RadView</h1>
+  <p class="sub">Visualización educativa con herramientas básicas. Las imágenes de esta demo son sintéticas y no corresponden a pacientes reales.</p>
+  <div class="card">
+    <div class="patientbar"><div><strong>Ana María Vargas Solano</strong><div class="meta">CT abdomen · serie educativa · 5 imágenes</div></div><span class="status s-blue">No diagnóstico</span></div>
+    <div class="viewer"><span class="view-label" id="viewerLabel">CT ABDOMEN · TOPograma · TRAINING</span>
+      <div class="view-tools"><button onclick="changeView(-1)">‹</button><button onclick="changeView(1)">›</button><button onclick="invert()">◐</button><button onclick="resetView()">1:1</button></div>
+      <canvas id="ctCanvas" width="560" height="560"></canvas>
+    </div>
+    <div class="btnrow" style="margin-top:10px">
+      <button class="btn" onclick="changeView(-1)">Anterior</button><button class="btn" onclick="changeView(1)">Siguiente</button>
+      <button class="btn" onclick="toast('Herramienta: zoom educativo')">Zoom</button><button class="btn" onclick="toast('Herramienta: medición educativa')">Medir</button><button class="btn" onclick="toast('Herramienta: ventana/nivel simulada')">W/L</button>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<!-- Special instructions -->
+<div id="specialModal" class="modal"><div class="modalbox"><div class="modalhead"><b>Indicaciones especiales</b><button class="close" onclick="closeModal('specialModal')">✕</button></div><div class="modalbody">
+  <div class="formgrid">
+    <div class="span4"><label>Indicaciones para el área / tecnólogo</label><textarea id="specialText">Paciente con dificultad leve para permanecer en decúbito. Explicar respiración antes de cada adquisición.</textarea></div>
+    <div><label>Ayuda de movilidad</label><select><option>No requerida</option><option>Requerida</option></select></div>
+    <div><label>Intérprete</label><select><option>No</option><option>Sí</option></select></div>
+    <div><label>Ayuno indicado</label><select><option>No</option><option>Sí</option></select></div>
+    <div><label>Contacto acompañante</label><input value="Registrado"></div>
+  </div>
+  <div class="btnrow" style="margin-top:12px"><button class="btn primary" onclick="saveSpecial()">Guardar indicaciones</button></div>
+</div></div></div>
+
+<!-- Clinical -->
+<div id="clinicalModal" class="modal"><div class="modalbox"><div class="modalhead"><b>Información clínica y seguridad</b><button class="close" onclick="closeModal('clinicalModal')">✕</button></div><div class="modalbody">
+  <div class="warning">Los datos de esta demo son ficticios. En un RIS real, estos campos se integran con la historia clínica y protocolos institucionales.</div>
+  <div class="formgrid" style="margin-top:12px">
+    <div><label>FUR</label><input type="date" value="2026-08-12"></div>
+    <div><label>Creatinina (mg/dL)</label><input id="creatinine" value="0.84"></div>
+    <div><label>Nitrógeno ureico BUN (mg/dL)</label><input value="14"></div>
+    <div><label>eGFR (referencial)</label><input value="92"></div>
+    <div class="span2"><label>Medicamentos actuales</label><textarea>Losartán 50 mg/día; omeprazol según necesidad.</textarea></div>
+    <div class="span2"><label>Alergias</label><textarea>Niega alergias medicamentosas conocidas.</textarea></div>
+    <div class="span4"><label>Antecedentes relevantes</label><textarea>Infarto agudo de miocardio: niega. Diabetes: no documentada. Hipertensión: sí.</textarea></div>
+    <div class="span4"><label>Contraste / riesgos comunicados</label><select><option>Pendiente de confirmar con paciente</option><option>Confirmado</option><option>No aplica</option></select></div>
+  </div>
+  <div class="btnrow" style="margin-top:12px"><button class="btn primary" onclick="saveClinical()">Guardar y marcar revisión</button></div>
+</div></div></div>
+
+<!-- Injector -->
+<div id="injectorModal" class="modal"><div class="modalbox"><div class="modalhead"><b>Control de inyector automático · doble cabezal</b><button class="close" onclick="closeModal('injectorModal')">✕</button></div><div class="modalbody">
+  <div class="injector">
+    <div class="screen">
+      <div style="font-size:12px;color:#94a3b8">TRAINING CONSOLE · NO CONNECTED HARDWARE</div>
+      <div class="injgrid" style="margin-top:10px">
+        <div class="injmetric"><small>Cabezal A · contraste</small><b id="mA">100 mL</b></div>
+        <div class="injmetric"><small>Cabezal B · solución</small><b id="mB">30 mL</b></div>
+        <div class="injmetric"><small>Flujo</small><b id="mRate">4.0 mL/s</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="formgrid" style="margin-top:12px">
+    <div><label>Volumen A (mL)</label><input id="volA" type="number" value="100" min="0" max="200"></div>
+    <div><label>Volumen B (mL)</label><input id="volB" type="number" value="30" min="0" max="100"></div>
+    <div><label>Flujo (mL/s)</label><input id="rate" type="number" value="4" min="0" max="10" step=".1"></div>
+    <div><label>Fase</label><select><option>Arterial</option><option>Venosa</option><option>Tardía</option></select></div>
+  </div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn" onclick="primeInjector()">Preparar / cebar</button>
+    <button class="btn primary" onclick="inject()">▶ Iniciar inyección simulada</button>
+    <button class="btn danger" onclick="stopInjector()">■ Detener</button>
+  </div>
+  <div id="injLog" class="mono" style="margin-top:12px;background:#0f172a;color:#cbd5e1;border-radius:9px;padding:10px;font-size:11px">[READY] Sistema en modo entrenamiento.</div>
+</div></div></div>
+
+<!-- About -->
+<div id="aboutModal" class="modal"><div class="modalbox"><div class="modalhead"><b>RadFlow · propósito educativo</b><button class="close" onclick="closeModal('aboutModal')">✕</button></div><div class="modalbody">
+  <p>Demo interactivo para enseñar cómo la información viaja desde el registro/RIS hasta la consola de CT y el visualizador.</p>
+  <div class="info">No se conecta a PACS/RIS/DICOM, no controla hardware, no administra contraste y no debe utilizarse para decisiones clínicas.</div>
+</div></div></div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let selectedProtocol='CT abdomen multiphase', region='Abdomen', viewIndex=0, inverted=false, acqRunning=false, timer=null;
+const phases=['topo','simple','art','ven','del'];
+const views=['TOPograma','ABDOMEN · SIMPLE','ABDOMEN · ARTERIAL','ABDOMEN · VENOSA','ABDOMEN · TARDÍA'];
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));
+  if(id==='viewer') drawCT();
+}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2300)}
+function updateModality(){document.getElementById('studyName').value={'CT':'CT abdomen y pelvis con contraste','Rayos X':'Radiografía de tórax PA y lateral','Ultrasonido (US)':'Ultrasonido abdominal','Resonancia Magnética (RM)':'RM columna lumbar'}[document.getElementById('modality').value]}
+function saveAppointment(){toast('Cita guardada · información administrativa registrada');document.getElementById('safetyStatus').textContent='Revisar';}
+function saveSpecial(){closeModal('specialModal');toast('Indicaciones especiales asociadas a la cita')}
+function saveClinical(){closeModal('clinicalModal');document.getElementById('safetyStatus').textContent='Revisada';document.getElementById('safetyStatus').className='status s-green';toast('Información clínica guardada · lista para verificación')}
+function loadCT(){showScreen('ct');toast('Orden RIS importada a la consola CT')}
+function selectRegion(r,el){region=r;document.getElementById('region').value=r;document.querySelectorAll('.hotspot').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');toast('Región seleccionada: '+r)}
+function selectProtocol(el){document.querySelectorAll('.protocol').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');selectedProtocol=el.dataset.proto;toast('Protocolo seleccionado: '+selectedProtocol)}
+function setStep(n){for(let i=1;i<=5;i++){const e=document.getElementById('st'+i);e.classList.toggle('on',i===n);e.classList.toggle('done',i<n)}}
+function confirmPosition(){
+  document.getElementById('positionCheck').checked=true;setStep(4);toast('Posición confirmada · revisión previa completada');
+}
+function startAcquisition(){
+  if(!document.getElementById('idcheck').checked||!document.getElementById('positionCheck').checked){toast('Complete identidad y posición antes de adquirir');return}
+  acqRunning=true;setStep(5);let i=0;
+  phases.forEach(p=>document.getElementById('ph-'+p).classList.remove('active','done'));
+  document.getElementById('ph-topo').classList.add('active');document.getElementById('dosebar').style.width='0%';
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(i>0){document.getElementById('ph-'+phases[i-1]).classList.remove('active');document.getElementById('ph-'+phases[i-1]).classList.add('done')}
+    if(i<phases.length){document.getElementById('ph-'+phases[i]).classList.add('active');document.getElementById('dosebar').style.width=((i+1)/phases.length*100)+'%';i++}
+    else {clearInterval(timer);acqRunning=false;document.getElementById('ph-del').classList.remove('active');document.getElementById('ph-del').classList.add('done');toast('Adquisición simulada finalizada');showScreen('viewer');}
+  },1400);
+  toast('Rayos X activados · simulación en curso');
+}
+function primeInjector(){document.getElementById('injState').textContent='Priming';document.getElementById('injLog').textContent='[PRIME] Circuito preparado en modo educativo.';setTimeout(()=>{document.getElementById('injState').textContent='Ready';document.getElementById('injLog').textContent+='\\n[READY] Preparación completada.'},900)}
+function inject(){const a=document.getElementById('volA').value,b=document.getElementById('volB').value,r=document.getElementById('rate').value;document.getElementById('injA').textContent=a+' mL';document.getElementById('injB').textContent=b+' mL';document.getElementById('injRate').textContent=r+' mL/s';document.getElementById('mA').textContent=a+' mL';document.getElementById('mB').textContent=b+' mL';document.getElementById('mRate').textContent=r+' mL/s';document.getElementById('injState').textContent='Injecting';document.getElementById('injLog').textContent=`[INJECT] Simulación iniciada\\n[A] ${a} mL · [B] ${b} mL · [RATE] ${r} mL/s\\n[TRAINING] Sin hardware conectado.`;setTimeout(()=>{document.getElementById('injState').textContent='Standby';document.getElementById('injLog').textContent+='\\n[DONE] Simulación finalizada.'},1800)}
+function stopInjector(){document.getElementById('injState').textContent='Stopped';document.getElementById('injLog').textContent+='\\n[STOP] Inyección simulada detenida por operador.'}
+function changeView(d){viewIndex=(viewIndex+d+views.length)%views.length;document.getElementById('viewerLabel').textContent='CT ABDOMEN · '+views[viewIndex]+' · TRAINING';drawCT()}
+function invert(){inverted=!inverted;drawCT()}
+function resetView(){inverted=false;drawCT()}
+function drawCT(){
+ const c=document.getElementById('ctCanvas'),ctx=c.getContext('2d'),w=c.width,h=c.height;
+ const img=ctx.createImageData(w,h), cx=w/2,cy=h/2;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const dx=x-cx,dy=y-cy,r=Math.sqrt(dx*dx+dy*dy),ang=Math.atan2(dy,dx);
+   let v=7;
+   if(r<230)v=24;
+   // synthetic anatomy: body, lungs, vertebra, organs, vessels; deterministic noise
+   if(r<190)v=55+18*Math.sin(ang*5+r/22);
+   const lung1=Math.pow((x-(cx-78))/62,2)+Math.pow((y-(cy-15))/105,2);
+   const lung2=Math.pow((x-(cx+78))/62,2)+Math.pow((y-(cy-15))/105,2);
+   if(lung1<1||lung2<1)v=13+8*Math.sin(y/8);
+   if(r<48 && y>cy-5)v=115+25*Math.sin(x/7);
+   const liver=Math.pow((x-(cx+60))/80,2)+Math.pow((y-(cy+70))/65,2);
+   if(liver<1)v=82+18*Math.sin(x/13);
+   const spleen=Math.pow((x-(cx-68))/38,2)+Math.pow((y-(cy+65))/50,2);
+   if(spleen<1)v=75;
+   const spine=Math.pow((x-cx)/28,2)+Math.pow((y-(cy+105))/45,2);
+   if(spine<1)v=160;
+   const vessel=Math.pow((x-(cx+12))/11,2)+Math.pow((y-(cy+78))/11,2);
+   if(vessel<1)v=190;
+   if(viewIndex===2 && vessel<2.4)v=235;
+   if(viewIndex===3 && vessel<2.4)v=215;
+   if(viewIndex===4 && vessel<2.4)v=175;
+   const noise=((x*17+y*31+viewIndex*47)%17)-8;
+   v=Math.max(0,Math.min(255,v+noise));
+   if(inverted)v=255-v;
+   const i=(y*w+x)*4;img.data[i]=img.data[i+1]=img.data[i+2]=v;img.data[i+3]=255;
+ }
+ ctx.putImageData(img,0,0);
+ // overlay orientation
+ ctx.fillStyle='rgba(255,255,255,.8)';ctx.font='bold 14px monospace';ctx.fillText('A',12,22);ctx.fillText('P',12,h-12);ctx.fillText('R',w-22,22);
+}
+function resetDemo(){location.reload()}
+document.getElementById('studyDate').value=new Date().toISOString().slice(0,10);
+drawCT();
+</script>
+</body>
+</html>
